@@ -42,6 +42,7 @@ func main() {
 	h := handler.New(logger, s, c.Discord.GuildID, map[string]handler.Command{
 		"create-embed": commands.NewCreateEmbedCommand(logger, c, servers),
 		"add-server":   commands.NewAddServerCommand(logger, c, servers),
+		"credentials":  commands.NewCredentialsCommand(logger, c, servers),
 	})
 	if s != nil {
 		s.AddHandlerOnce(func(s *discordgo.Session, e *discordgo.Ready) {

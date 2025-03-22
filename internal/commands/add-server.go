@@ -54,7 +54,7 @@ func (c *AddServerCommand) OnCommand(s *discordgo.Session, i *discordgo.Interact
 	})
 	var d addServerData
 	if err := marshaller.Unmarshal(i.Interaction.ApplicationCommandData().Options, &d); err != nil {
-		c.logger.Error("load-register-match-data", "error", err)
+		c.logger.Error("load-add-server-data", "error", err)
 		ErrorResponse(s, i.Interaction, "Could not load data from interaction. Error: "+err.Error())
 		return
 	}

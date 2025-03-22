@@ -1,11 +1,17 @@
 # github.com/bwmarrin/discordgo v0.28.1
 ## explicit; go 1.13
 github.com/bwmarrin/discordgo
+# github.com/floriansw/go-crcon v0.0.0-20250320165121-710591229231
+## explicit; go 1.24.1
+github.com/floriansw/go-crcon
 # github.com/floriansw/go-discordgo-utils v0.0.0-20250321230001-982cec70c730
 ## explicit; go 1.24.1
 github.com/floriansw/go-discordgo-utils/handler
 github.com/floriansw/go-discordgo-utils/marshaller
 github.com/floriansw/go-discordgo-utils/util
+# github.com/floriansw/go-tcadmin v0.0.0-20250320214444-adf04509b951
+## explicit; go 1.24.1
+github.com/floriansw/go-tcadmin
 # github.com/fsnotify/fsnotify v1.8.0
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
