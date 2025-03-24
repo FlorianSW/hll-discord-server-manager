@@ -76,7 +76,24 @@ func unmarshalApplicationCommandInteractionDataOptions(d []*discordgo.Applicatio
 			if !slices.Contains(intTypes, option.Type) {
 				return fmt.Errorf("cannot unmarshal option %s of type %s into field %s of type %s", *p, option.Type, f.Name, f.Type.Kind())
 			}
-			iv, ok := option.Value.(int)
+			var (
+				iv int64
+				ok bool
+			)
+			switch option.Value.(type) {
+			case float64:
+				var i float64
+				i, ok = option.Value.(float64)
+				iv = int64(i)
+			case int64:
+				iv, ok = option.Value.(int64)
+			case int:
+				var i int
+				i, ok = option.Value.(int)
+				iv = int64(i)
+			default:
+				return fmt.Errorf("option value of option %s is not a valid int type, type: %s", option.Name, reflect.TypeOf(option.Value).String())
+			}
 			if !ok {
 				return fmt.Errorf("cannot convert %s to int for field %s: %w", option.Name, f.Name, err)
 			}

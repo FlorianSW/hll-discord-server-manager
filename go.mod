@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/bwmarrin/discordgo v0.28.1
 	github.com/floriansw/go-crcon v0.0.0-20250320165121-710591229231
-	github.com/floriansw/go-discordgo-utils v0.0.0-20250321230001-982cec70c730
+	github.com/floriansw/go-discordgo-utils v0.0.0-20250324201857-6fe1ae6db4c5
 	github.com/floriansw/go-tcadmin v0.0.0-20250320214444-adf04509b951
 	github.com/google/uuid v1.6.0
 	github.com/onsi/ginkgo v1.16.5

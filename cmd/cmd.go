@@ -44,11 +44,13 @@ func main() {
 	servers := resources.NewServers("./servers/")
 	templates := resources.NewTemplates("./templates/")
 	h := handler.New(logger, s, c.Discord.GuildID, map[string]handler.Command{
-		"create-embed": commands.NewCreateEmbedCommand(logger, c, servers),
-		"add-server":   commands.NewAddServerCommand(logger, c, servers),
-		"credentials":  commands.NewCredentialsCommand(logger, c, servers),
-		"add-template": commands.NewAddTemplateCommand(logger, c, templates),
-		"template":     commands.NewTemplatesCommand(logger, c, templates),
+		"create-embed":     commands.NewCreateEmbedCommand(logger, c, servers),
+		"add-server":       commands.NewAddServerCommand(logger, c, servers),
+		"credentials":      commands.NewCredentialsCommand(logger, c, servers),
+		"add-template":     commands.NewAddTemplateCommand(logger, c, templates),
+		"template":         commands.NewTemplatesCommand(logger, c, templates),
+		"add-broadcast":    commands.NewAddBroadcastMessageCommand(logger, c, templates),
+		"delete-broadcast": commands.NewDeleteBroadcastMessageCommand(logger, c, templates),
 	})
 	if s != nil {
 		s.AddHandlerOnce(func(s *discordgo.Session, e *discordgo.Ready) {
