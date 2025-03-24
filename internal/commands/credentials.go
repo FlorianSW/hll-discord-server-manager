@@ -7,12 +7,10 @@ import (
 	"github.com/floriansw/go-crcon"
 	"github.com/floriansw/go-discordgo-utils/marshaller"
 	. "github.com/floriansw/go-discordgo-utils/util"
-	"github.com/floriansw/go-tcadmin"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
 	"github.com/floriansw/hll-discord-server-watcher/resources"
 	"log/slog"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"strings"
 )
@@ -41,10 +39,6 @@ var (
 	}
 )
 
-type addCrconCredentialsData struct {
-	Name string `discordgo:"name"`
-}
-
 type credentialsData struct {
 	ServerId string `discordgo:"server"`
 }
@@ -52,10 +46,10 @@ type credentialsData struct {
 type CredentialsCommand struct {
 	logger  *slog.Logger
 	config  *internal.Config
-	servers internal.Servers
+	servers internal.Storage[resources.Server]
 }
 
-func NewCredentialsCommand(l *slog.Logger, c *internal.Config, m internal.Servers) *CredentialsCommand {
+func NewCredentialsCommand(l *slog.Logger, c *internal.Config, m internal.Storage[resources.Server]) *CredentialsCommand {
 	return &CredentialsCommand{
 		logger:  l,
 		config:  c,
@@ -64,15 +58,32 @@ func NewCredentialsCommand(l *slog.Logger, c *internal.Config, m internal.Server
 }
 
 func (c *CredentialsCommand) Definition(cmd string) *discordgo.ApplicationCommand {
+	return &discordgo.ApplicationCommand{
+		Name:        cmd,
+		Description: "Manage credentials of a server",
+		Options: []*discordgo.ApplicationCommandOption{{
+			Name:         "server",
+			Description:  "The server ID of which to manage credentials",
+			Type:         discordgo.ApplicationCommandOptionString,
+			Required:     true,
+			Autocomplete: true,
+		}},
+	}
+}
+
+func (c *CredentialsCommand) OnAutocomplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	l, err := c.servers.List()
 	if err != nil {
 		c.logger.Error("list-servers", "error", err)
+		ErrorResponse(s, i.Interaction, "Could not list servers. Error: "+err.Error())
+		return
 	}
 	var choices []*discordgo.ApplicationCommandOptionChoice
-	for _, s := range l {
-		server, err := c.servers.Find(s)
+	for _, id := range l {
+		server, err := c.servers.Find(id)
 		if err != nil {
-			c.logger.Error("find-servers", "error", err)
+			c.logger.Error("find-server", "error", err)
+			ErrorResponse(s, i.Interaction, "Could not find server with ID "+id+". Error: "+err.Error())
 			continue
 		}
 		choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
@@ -80,16 +91,16 @@ func (c *CredentialsCommand) Definition(cmd string) *discordgo.ApplicationComman
 			Value: server.ServerId,
 		})
 	}
-	return &discordgo.ApplicationCommand{
-		Name:        cmd,
-		Description: "Manage credentials of a server",
-		Options: []*discordgo.ApplicationCommandOption{{
-			Name:        "server",
-			Description: "The server ID of which to manage credentials",
-			Type:        discordgo.ApplicationCommandOptionString,
-			Required:    true,
-			Choices:     choices,
-		}},
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionApplicationCommandAutocompleteResult,
+		Data: &discordgo.InteractionResponseData{
+			Choices: choices,
+		},
+	})
+	if err != nil {
+		c.logger.Error("response", "error", err)
+		ErrorResponse(s, i.Interaction, "Could not send response. Error: "+err.Error())
+		return
 	}
 }
 

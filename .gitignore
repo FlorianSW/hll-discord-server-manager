@@ -1,4 +1,5 @@
 .idea/
 config.json
 servers/
+templates/
 docker-compose.yml

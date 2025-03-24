@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/floriansw/go-discordgo-utils/handler"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
@@ -34,15 +35,20 @@ func main() {
 			return
 		}
 	}
-	if err = os.MkdirAll("./servers/", 0644); err != nil {
-		logger.Error("create-matches", err)
-		return
+	for _, d := range []string{"servers", "templates"} {
+		if err = os.MkdirAll(fmt.Sprintf("./%s/", d), 0644); err != nil {
+			logger.Error("create-matches", err)
+			return
+		}
 	}
 	servers := resources.NewServers("./servers/")
+	templates := resources.NewTemplates("./templates/")
 	h := handler.New(logger, s, c.Discord.GuildID, map[string]handler.Command{
 		"create-embed": commands.NewCreateEmbedCommand(logger, c, servers),
 		"add-server":   commands.NewAddServerCommand(logger, c, servers),
 		"credentials":  commands.NewCredentialsCommand(logger, c, servers),
+		"add-template": commands.NewAddTemplateCommand(logger, c, templates),
+		"template":     commands.NewTemplatesCommand(logger, c, templates),
 	})
 	if s != nil {
 		s.AddHandlerOnce(func(s *discordgo.Session, e *discordgo.Ready) {

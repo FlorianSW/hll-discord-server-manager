@@ -8,6 +8,10 @@ type Server struct {
 	TCAdminCredentials *TCAdminCredentials `json:"tcadmin_credentials"`
 }
 
+func (s Server) Id() string {
+	return s.ServerId
+}
+
 type CRConCredentials struct {
 	BaseUrl string `json:"base_url"`
 	ApiKey  string `json:"api_key"`

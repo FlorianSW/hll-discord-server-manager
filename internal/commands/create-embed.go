@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	. "github.com/floriansw/go-discordgo-utils/util"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
+	"github.com/floriansw/hll-discord-server-watcher/resources"
 	"log/slog"
 	"strings"
 )
@@ -11,12 +12,12 @@ import (
 type CreateEmbedCommand struct {
 	logger  *slog.Logger
 	config  *internal.Config
-	servers internal.Servers
+	servers internal.Storage[resources.Server]
 }
 
 const createEmbedPrefix = "create-embed"
 
-func NewCreateEmbedCommand(l *slog.Logger, c *internal.Config, m internal.Servers) *CreateEmbedCommand {
+func NewCreateEmbedCommand(l *slog.Logger, c *internal.Config, m internal.Storage[resources.Server]) *CreateEmbedCommand {
 	return &CreateEmbedCommand{
 		logger:  l,
 		config:  c,

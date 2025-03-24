@@ -8,9 +8,9 @@ const (
 	HLLFileId = "1"
 )
 
-type Servers interface {
-	Find(serverId string) (*resources.Server, error)
-	Save(server resources.Server) error
-	Delete(serverId string) error
+type Storage[T resources.Identifiable] interface {
+	Find(id string) (*T, error)
+	Save(entity T) error
+	Delete(id string) error
 	List() ([]string, error)
 }

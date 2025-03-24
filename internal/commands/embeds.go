@@ -3,9 +3,10 @@ package commands
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
+	"github.com/floriansw/hll-discord-server-watcher/resources"
 )
 
-func serversEmbed(s internal.Servers) (embeds []*discordgo.MessageEmbed, buttons []discordgo.MessageComponent, err error) {
+func serversEmbed(s internal.Storage[resources.Server]) (embeds []*discordgo.MessageEmbed, buttons []discordgo.MessageComponent, err error) {
 	buttons = append(buttons, discordgo.Button{
 		Emoji:    &discordgo.ComponentEmoji{ID: "1283790096461594655"},
 		Style:    discordgo.SecondaryButton,
