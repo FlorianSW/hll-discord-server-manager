@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/floriansw/go-crcon"
 	"github.com/floriansw/go-discordgo-utils/marshaller"
 	. "github.com/floriansw/go-discordgo-utils/util"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
 	"github.com/floriansw/hll-discord-server-watcher/resources"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"strings"
 )
@@ -36,6 +34,7 @@ var (
 		"can_view_profanities",
 		"can_ban_profanities",
 		"can_change_profanities",
+		"can_view_playerids",
 	}
 )
 
@@ -363,7 +362,11 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 		return
 	}
 
-	client := crcon.NewClient(http.Client{}, u.String(), crcon.Credentials{ApiKey: d.ApiKey})
+	creds := resources.CRConCredentials{
+		BaseUrl: d.Url,
+		ApiKey:  d.ApiKey,
+	}
+	client := crconClient(creds)
 	if p, err := client.OwnPermissions(context.Background()); err != nil {
 		c.logger.Error("request-permissions", "error", err)
 		ErrorResponse(s, i.Interaction, "Could not verify permissions of the provided credentials. Error: "+err.Error())
@@ -380,10 +383,7 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 		return
 	}
 
-	server.CRConCredentials = &resources.CRConCredentials{
-		BaseUrl: d.Url,
-		ApiKey:  d.ApiKey,
-	}
+	server.CRConCredentials = &creds
 	if err := c.servers.Save(*server); err != nil {
 		c.logger.Error("save-server", "error", err)
 		ErrorResponse(s, i.Interaction, "Couldn't save server data. Error: "+err.Error())
@@ -421,19 +421,20 @@ func (c *CredentialsCommand) onConfirmTCAdminCredentials(s *discordgo.Session, i
 		return
 	}
 
-	client := tcadminClient(d.Url, d.Username, d.Password)
+	creds := resources.TCAdminCredentials{
+		BaseUrl:   d.Url,
+		ServiceId: d.ServiceId,
+		Username:  d.Username,
+		Password:  d.Password,
+	}
+	client := tcadminClient(creds)
 	if _, err := client.ServerInfo(d.ServiceId); err != nil {
 		c.logger.Error("request-status", "error", err)
 		ErrorResponse(s, i.Interaction, "Could not verify permissions of the provided credentials. Error: "+err.Error())
 		return
 	}
 
-	server.TCAdminCredentials = &resources.TCAdminCredentials{
-		BaseUrl:   d.Url,
-		ServiceId: d.ServiceId,
-		Username:  d.Username,
-		Password:  d.Password,
-	}
+	server.TCAdminCredentials = &creds
 	if err := c.servers.Save(*server); err != nil {
 		c.logger.Error("save-server", "error", err)
 		ErrorResponse(s, i.Interaction, "Couldn't save server data. Error: "+err.Error())

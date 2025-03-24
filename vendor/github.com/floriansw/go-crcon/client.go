@@ -233,10 +233,29 @@ func (c *client) GameState(ctx context.Context) (GameState, error) {
 }
 
 func (c *client) PlayerIds(ctx context.Context) ([]string, error) {
-	res, err := c.makeGet(ctx, "/api/get_playerids")
+	u, err := url.JoinPath(c.baseUrl, "/api/get_playerids")
 	if err != nil {
 		return nil, err
 	}
+	u += "?as_dict=true"
+	r, err := http.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	r = r.WithContext(ctx)
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.creds.ApiKey))
+
+	res, err := c.hc.Do(r)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode == http.StatusForbidden {
+		return nil, ErrForbidden
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+
 	result, err := asResponse[map[string]string](res)
 	if err != nil {
 		return nil, err

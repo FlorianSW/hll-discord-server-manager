@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"context"
+	"github.com/floriansw/go-crcon"
 	"github.com/floriansw/go-tcadmin"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
+	"github.com/floriansw/hll-discord-server-watcher/resources"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
@@ -46,12 +49,26 @@ type TCAdmin interface {
 	Restart(serviceId string) (string, error)
 }
 
-func tcadminClient(url, username, password string) TCAdmin {
+func tcadminClient(creds resources.TCAdminCredentials) TCAdmin {
 	jar, _ := cookiejar.New(nil)
 	return tcadmin.NewClient(http.Client{
 		Jar: jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-	}, url, internal.HLLGameId, internal.HLLModId, internal.HLLFileId, tcadmin.Credentials{Username: username, Password: password})
+	}, creds.BaseUrl, internal.HLLGameId, internal.HLLModId, internal.HLLFileId, tcadmin.Credentials{Username: creds.Username, Password: creds.Password})
+}
+
+type CRCon interface {
+	SetTeamSwitchCooldown(ctx context.Context, minutes int) error
+	SetAutoBalanceThreshold(ctx context.Context, maxDiff int) error
+	SetWelcomeMessage(ctx context.Context, message string) error
+	WelcomeMessage(ctx context.Context) (string, error)
+	ServerSettings(ctx context.Context) (crcon.ServerSettings, error)
+	PlayerIds(ctx context.Context) ([]string, error)
+	OwnPermissions(ctx context.Context) (crcon.OwnPermissions, error)
+}
+
+func crconClient(creds resources.CRConCredentials) CRCon {
+	return crcon.NewClient(http.Client{}, creds.BaseUrl, crcon.Credentials{ApiKey: creds.ApiKey})
 }

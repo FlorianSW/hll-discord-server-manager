@@ -379,11 +379,12 @@ func onConfirm[T any](logger *slog.Logger, templates internal.Storage[resources.
 		ErrorResponse(s, i.Interaction, "There was an error saving the template. Error: "+err.Error())
 		return
 	}
+	embeds, components := templateEmbed(tpl)
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: &discordgo.InteractionResponseData{
-			Flags:   discordgo.MessageFlagsEphemeral,
-			Content: "Template updated. Click refresh to see the updated template.",
+			Embeds:     embeds,
+			Components: components,
 		},
 	})
 	if err != nil {

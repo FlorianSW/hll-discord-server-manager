@@ -11,10 +11,10 @@ type discordApp struct {
 	session         *discordgo.Session
 	guildId         string
 	commands        []*discordgo.ApplicationCommand
-	commandHandlers map[string]Command
+	commandHandlers map[string]interface{}
 }
 
-func New(logger *slog.Logger, session *discordgo.Session, guildId string, commands map[string]Command) *discordApp {
+func New(logger *slog.Logger, session *discordgo.Session, guildId string, commands map[string]interface{}) *discordApp {
 	handler := &discordApp{
 		logger:   logger,
 		session:  session,
@@ -24,7 +24,9 @@ func New(logger *slog.Logger, session *discordgo.Session, guildId string, comman
 
 	handler.commandHandlers = commands
 	for cmd, command := range handler.commandHandlers {
-		handler.commands = append(handler.commands, command.Definition(cmd))
+		if c, ok := command.(Command); ok {
+			handler.commands = append(handler.commands, c.Definition(cmd))
+		}
 	}
 
 	return handler
@@ -71,15 +73,17 @@ func (a *discordApp) Listen() error {
 			name string
 			h    Command
 			mc   MessageComponent
-			ok   bool
 		)
 		switch i.Type {
 		case discordgo.InteractionApplicationCommandAutocomplete:
 			fallthrough
 		case discordgo.InteractionApplicationCommand:
 			name = i.ApplicationCommandData().Name
-			if h, ok = a.commandHandlers[name]; !ok {
+			if handler, ok := a.commandHandlers[name]; !ok {
 				a.error(s, i.Interaction, "Command does not exist: "+name)
+				return
+			} else if h, ok = handler.(Command); !ok {
+				a.error(s, i.Interaction, "Command cannot handle slash command: "+name)
 				return
 			}
 		case discordgo.InteractionMessageComponent:

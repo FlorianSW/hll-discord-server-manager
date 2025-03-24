@@ -6,6 +6,8 @@ type Server struct {
 
 	CRConCredentials   *CRConCredentials   `json:"crcon_credentials"`
 	TCAdminCredentials *TCAdminCredentials `json:"tcadmin_credentials"`
+
+	PendingUpdate *ServerUpdate `json:"pending_update"`
 }
 
 func (s Server) Id() string {
@@ -22,4 +24,10 @@ type TCAdminCredentials struct {
 	ServiceId string `json:"service_id"`
 	Username  string `json:"username"`
 	Password  string `json:"password"`
+}
+
+type ServerUpdate struct {
+	TemplateId     string `json:"template_id"`
+	ServerName     string `json:"server_name"`
+	ServerPassword string `json:"server_password"`
 }
