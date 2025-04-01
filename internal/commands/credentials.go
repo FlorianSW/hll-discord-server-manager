@@ -372,12 +372,12 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 		c.logger.Error("request-permissions", "error", err)
 		ErrorResponse(s, i.Interaction, "Could not verify permissions of the provided credentials. Error: "+err.Error())
 		return
-	} else if containsAll(p.Permissions, requiredPermissions) {
+	} else if miss := missingElements(p.Permissions, requiredPermissions); len(miss) > 0 {
 		ErrorResponse(
 			s, i.Interaction,
 			fmt.Sprintf(
-				"The provided API key grants more or less permissions than the required ones. Please only provide the required permissions.\n\nProvided:\n```\n%s```\n\nRequired:\n```\n%s```",
-				strings.Join(p.Permissions, "\n"),
+				"The provided API key grants more or less permissions than the required ones. Please only provide the required permissions.\n\nMissing:\n```\n%s```\n\nRequired:\n```\n%s```",
+				strings.Join(miss, "\n"),
 				strings.Join(requiredPermissions, "\n"),
 			),
 		)
@@ -398,13 +398,13 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 	}
 }
 
-func containsAll[T comparable](s []T, l []T) bool {
+func missingElements[T comparable](s []T, l []T) (res []T) {
 	for _, t := range l {
 		if !slices.Contains(s, t) {
-			return false
+			res = append(res, t)
 		}
 	}
-	return true
+	return
 }
 
 func (c *CredentialsCommand) onConfirmTCAdminCredentials(s *discordgo.Session, i *discordgo.InteractionCreate, serverId string) {
