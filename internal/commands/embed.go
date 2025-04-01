@@ -124,6 +124,10 @@ func (c *EmbedCommand) onSelectServer(s *discordgo.Session, i *discordgo.Interac
 		ErrorResponse(s, i.Interaction, "Could not find server with ID "+sid+". Error: "+err.Error())
 		return
 	}
+	if server.TCAdminCredentials == nil || server.CRConCredentials == nil {
+		ErrorResponse(s, i.Interaction, "The server misses some credentials and can therefore no yet managed by this tool.")
+		return
+	}
 
 	if server.PendingUpdate != nil {
 		server.PendingUpdate = nil
