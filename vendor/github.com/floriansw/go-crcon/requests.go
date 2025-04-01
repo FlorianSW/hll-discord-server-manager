@@ -33,6 +33,21 @@ type setWelcomeMessage struct {
 	Forward bool   `json:"forward"`
 }
 
+type setProfanities struct {
+	Profanities []string `json:"profanities"`
+}
+
+type setAutoBroadcastMessages struct {
+	Enabled   bool               `json:"enabled"`
+	Randomize bool               `json:"randomize"`
+	Messages  []broadcastMessage `json:"messages"`
+}
+
+type broadcastMessage struct {
+	Message string `json:"message"`
+	Time    int    `json:"time_sec"`
+}
+
 type messagePlayerRequest struct {
 	Message  string `json:"message"`
 	PlayerId string `json:"player_id"`

@@ -122,6 +122,27 @@ func (c *client) SetWelcomeMessage(ctx context.Context, message string) error {
 	})
 }
 
+func (c *client) SetProfanities(ctx context.Context, prof []string) error {
+	return c.makePost(ctx, "/api/set_profanities", setProfanities{
+		Profanities: prof,
+	})
+}
+
+func (c *client) SetAutoBroadcastConfig(ctx context.Context, config AutoBroadcastConfig) error {
+	var messages []broadcastMessage
+	for _, message := range config.Messages {
+		messages = append(messages, broadcastMessage{
+			Message: message.Message,
+			Time:    message.TimeSec,
+		})
+	}
+	return c.makePost(ctx, "/api/set_auto_broadcasts_config", setAutoBroadcastMessages{
+		Enabled:   config.Enabled,
+		Randomize: config.Randomize,
+		Messages:  messages,
+	})
+}
+
 func (c *client) WelcomeMessage(ctx context.Context) (string, error) {
 	res, err := c.makeGet(ctx, "/api/get_welcome_message")
 	if err != nil {

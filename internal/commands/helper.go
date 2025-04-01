@@ -62,6 +62,8 @@ func tcadminClient(creds resources.TCAdminCredentials) TCAdmin {
 type CRCon interface {
 	SetTeamSwitchCooldown(ctx context.Context, minutes int) error
 	SetAutoBalanceThreshold(ctx context.Context, maxDiff int) error
+	SetProfanities(ctx context.Context, prof []string) error
+	SetAutoBroadcastConfig(ctx context.Context, config crcon.AutoBroadcastConfig) error
 	SetWelcomeMessage(ctx context.Context, message string) error
 	WelcomeMessage(ctx context.Context) (string, error)
 	ServerSettings(ctx context.Context) (crcon.ServerSettings, error)

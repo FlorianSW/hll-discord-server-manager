@@ -1,7 +1,7 @@
 # github.com/bwmarrin/discordgo v0.28.1
 ## explicit; go 1.13
 github.com/bwmarrin/discordgo
-# github.com/floriansw/go-crcon v0.0.0-20250324213859-58ef345f9210
+# github.com/floriansw/go-crcon v0.0.0-20250401152855-226f4d462c61
 ## explicit; go 1.24.1
 github.com/floriansw/go-crcon
 # github.com/floriansw/go-discordgo-utils v0.0.0-20250324210312-73a604af0b0b

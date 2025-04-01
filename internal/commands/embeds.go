@@ -122,7 +122,7 @@ func serverEmbed(t internal.Storage[resources.Template], s resources.Server) (em
 		discordgo.Button{
 			Label:    "Save and restart",
 			Style:    discordgo.PrimaryButton,
-			Disabled: false,
+			Disabled: pu.TemplateId == "",
 			CustomID: customId(embedPrefix, "save-restart", s.ServerId),
 		}, discordgo.Button{
 			Label:    "Set Name & Password",

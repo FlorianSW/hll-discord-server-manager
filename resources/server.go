@@ -31,3 +31,7 @@ type ServerUpdate struct {
 	ServerName     string `json:"server_name"`
 	ServerPassword string `json:"server_password"`
 }
+
+func (s ServerUpdate) RequiresRestart() bool {
+	return s.ServerName != "" || s.ServerPassword != ""
+}

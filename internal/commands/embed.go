@@ -1,7 +1,10 @@
 package commands
 
 import (
+	"context"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/floriansw/go-crcon"
 	"github.com/floriansw/go-discordgo-utils/marshaller"
 	. "github.com/floriansw/go-discordgo-utils/util"
 	"github.com/floriansw/hll-discord-server-watcher/internal"
@@ -45,6 +48,9 @@ func (c *EmbedCommand) OnMessageComponent(s *discordgo.Session, i *discordgo.Int
 	} else if matchesId(cid, customId(embedPrefix, "select-template")) {
 		peek, _ := peekId(cid)
 		c.onSelectTemplate(s, i, peek)
+	} else if matchesId(cid, customId(embedPrefix, "save-restart")) {
+		peek, _ := peekId(cid)
+		c.onSaveRestart(s, i, peek)
 	}
 }
 
@@ -189,6 +195,107 @@ func (c *EmbedCommand) onSelectTemplate(s *discordgo.Session, i *discordgo.Inter
 			Embeds:     embeds,
 			Components: components,
 		},
+	})
+	if err != nil {
+		c.logger.Error("edit-response", "error", err)
+	}
+}
+
+func (c *EmbedCommand) onSaveRestart(s *discordgo.Session, i *discordgo.InteractionCreate, sid string) {
+	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+
+	server, err := c.servers.Find(sid)
+	if err != nil {
+		c.logger.Error("find-server", "error", err)
+		ErrorResponse(s, i.Interaction, "Error trying to find server with ID "+sid+". Error: "+err.Error())
+		return
+	}
+	if server == nil || server.CRConCredentials == nil || server.TCAdminCredentials == nil {
+		ErrorResponse(s, i.Interaction, "Could not find server with ID "+sid+".")
+		return
+	}
+	if server.PendingUpdate == nil {
+		ErrorResponse(s, i.Interaction, "There is no pending update for this server. Please start over by selecting the server again.")
+		return
+	}
+	template, err := c.templates.Find(server.PendingUpdate.TemplateId)
+	if err != nil {
+		c.logger.Error("find-template", "error", err)
+		ErrorResponse(s, i.Interaction, "Error trying to find template with ID "+server.PendingUpdate.TemplateId+". Error: "+err.Error())
+		return
+	}
+	if template == nil {
+		ErrorResponse(s, i.Interaction, "Could not find server with ID "+server.PendingUpdate.TemplateId+".")
+		return
+	}
+
+	var errors []error
+	ctx := context.Background()
+	cc := crconClient(*server.CRConCredentials)
+	config := crcon.AutoBroadcastConfig{Enabled: true, Randomize: false}
+	for _, message := range template.BroadcastMessage {
+		config.Messages = append(config.Messages, crcon.BroadcastMessage{
+			TimeSec: message.Time,
+			Message: message.Message,
+		})
+	}
+	err = cc.SetAutoBroadcastConfig(ctx, config)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Auto-Broadcast: %w", err))
+	}
+	err = cc.SetWelcomeMessage(ctx, template.WelcomeMessage)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Welcome message: %w", err))
+	}
+	err = cc.SetTeamSwitchCooldown(ctx, template.TeamSwitchCooldown)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Team-Switch-Cooldown: %w", err))
+	}
+	err = cc.SetAutoBalanceThreshold(ctx, template.AutoBalanceThreshold)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Auto-Balance threshold: %w", err))
+	}
+	err = cc.SetProfanities(ctx, template.ProfanityFilter)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Profanities: %w", err))
+	}
+
+	tc := tcadminClient(*server.TCAdminCredentials)
+	err = tc.SetServerInfo(server.TCAdminCredentials.ServiceId, server.PendingUpdate.ServerName, server.PendingUpdate.ServerPassword)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("updating Server name and password: %w", err))
+	}
+	if err == nil && server.PendingUpdate.RequiresRestart() {
+		_, err = tc.Restart(server.TCAdminCredentials.ServiceId)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("restarting server: %w", err))
+		}
+	}
+
+	server.PendingUpdate = nil
+	err = c.servers.Save(*server)
+	if err != nil {
+		c.logger.Error("save-server", "error", err)
+		ErrorResponse(s, i.Interaction, "Error saving server. Error: "+err.Error())
+		return
+	}
+
+	message := "The server was successfully prepared."
+	if len(errors) != 0 {
+		message = "Some settings could not be updated. Any not mentioned setting was made successfully. Errors:\n\n"
+		for _, e := range errors {
+			message += "* " + e.Error() + "\n"
+		}
+	}
+	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Content:    &message,
+		Embeds:     &[]*discordgo.MessageEmbed{},
+		Components: &[]discordgo.MessageComponent{},
 	})
 	if err != nil {
 		c.logger.Error("edit-response", "error", err)

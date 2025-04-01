@@ -75,3 +75,14 @@ type OwnPermissions struct {
 	Superuser   bool
 	Permissions Permissions
 }
+
+type AutoBroadcastConfig struct {
+	Enabled   bool
+	Randomize bool
+	Messages  []BroadcastMessage
+}
+
+type BroadcastMessage struct {
+	Message string
+	TimeSec int
+}
