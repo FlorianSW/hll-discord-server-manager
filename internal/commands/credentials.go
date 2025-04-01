@@ -10,6 +10,7 @@ import (
 	"github.com/floriansw/hll-discord-server-watcher/resources"
 	"log/slog"
 	"net/url"
+	"slices"
 	"strings"
 )
 
@@ -371,7 +372,7 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 		c.logger.Error("request-permissions", "error", err)
 		ErrorResponse(s, i.Interaction, "Could not verify permissions of the provided credentials. Error: "+err.Error())
 		return
-	} else if !p.Permissions.ContainsOnly(requiredPermissions) {
+	} else if containsAll(p.Permissions, requiredPermissions) {
 		ErrorResponse(
 			s, i.Interaction,
 			fmt.Sprintf(
@@ -395,6 +396,15 @@ func (c *CredentialsCommand) onConfirmCRConCredentials(s *discordgo.Session, i *
 	if err != nil {
 		c.logger.Error("edit-original-message", "error", err)
 	}
+}
+
+func containsAll[T comparable](s []T, l []T) bool {
+	for _, t := range l {
+		if !slices.Contains(s, t) {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *CredentialsCommand) onConfirmTCAdminCredentials(s *discordgo.Session, i *discordgo.InteractionCreate, serverId string) {
